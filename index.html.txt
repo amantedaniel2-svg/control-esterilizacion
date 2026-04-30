@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Control Esterilización</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+</head>
+
+<body style="font-family: Arial; padding: 20px;">
+
+  <h2>Registro Control en Central de Esterilización</h2>
+
+  <h3>OPA</h3>
+  <form action="/opa" method="post" enctype="multipart/form-data">
+    <select name="tecnico">
+      <option>ALLENDE VICTOR HUGO</option>
+      <option>AVALOS LAURA ANGELA</option>
+      <option>AVILA MARIA INES</option>
+    </select>
+    <br/><br/>
+    <input type="number" name="ppm" placeholder="ppm" required/>
+    <br/><br/>
+    <input type="file" name="foto" required/>
+    <br/><br/>
+    <button>Guardar</button>
+  </form>
+
+  <h3>ATP</h3>
+  <form action="/atp" method="post" enctype="multipart/form-data">
+    <select name="tecnico">
+      <option>ALLENDE VICTOR HUGO</option>
+      <option>AVALOS LAURA ANGELA</option>
+    </select>
+    <br/><br/>
+    <input type="number" name="resultado" placeholder="RLU" required/>
+    <br/><br/>
+    <input type="text" name="ubicacion" placeholder="Ubicación"/>
+    <br/><br/>
+    <input type="file" name="foto" required/>
+    <br/><br/>
+    <button>Guardar</button>
+  </form>
+
+  <br/>
+  <a href="/reporte" target="_blank">Ver Reporte</a>
+
+</body>
+</html>

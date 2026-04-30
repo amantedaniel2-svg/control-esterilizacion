@@ -1,0 +1,41 @@
+const express = require("express");
+const multer = require("multer");
+const cors = require("cors");
+const path = require("path");
+
+const app = express();
+app.use(cors());
+app.use(express.urlencoded({ extended: true }));
+
+const upload = multer({ dest: "uploads/" });
+
+let registros = [];
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
+
+app.post("/opa", upload.single("foto"), (req, res) => {
+  const { tecnico, ppm } = req.body;
+  const estado = ppm >= 0.3 ? "ACEPTADO" : "RECHAZADO";
+
+  if (!req.file) return res.send("FALTA FOTO");
+
+  registros.push({ tipo: "OPA", tecnico, ppm, estado, fecha: new Date() });
+  res.redirect("/");
+});
+
+app.post("/atp", upload.single("foto"), (req, res) => {
+  const { tecnico, resultado, ubicacion } = req.body;
+
+  if (!req.file) return res.send("FALTA FOTO");
+
+  registros.push({ tipo: "ATP", tecnico, resultado, ubicacion, fecha: new Date() });
+  res.redirect("/");
+});
+
+app.get("/reporte", (req, res) => {
+  res.json(registros);
+});
+
+app.listen(process.env.PORT || 3000);
