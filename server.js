@@ -26,12 +26,34 @@ app.post("/opa", upload.single("foto"), async (req, res) => {
     const { tecnico, ppm } = req.body;
     const estado = ppm >= 0.3 ? "ACEPTADO" : "RECHAZADO";
 
+    let foto_url = null;
+
+    if (req.file) {
+      const fileName = Date.now() + "-" + req.file.originalname;
+
+      const { data, error } = await supabase.storage
+        .from("fotos")
+        .upload(fileName, require("fs").readFileSync(req.file.path), {
+          contentType: req.file.mimetype
+        });
+
+      if (!error) {
+        const { data: publicUrl } = supabase
+          .storage
+          .from("fotos")
+          .getPublicUrl(fileName);
+
+        foto_url = publicUrl.publicUrl;
+      }
+    }
+
     await supabase.from("registros").insert([
       {
         tecnico,
         tipo: "OPA",
         resultado: ppm,
-        estado
+        estado,
+        foto_url
       }
     ]);
 
