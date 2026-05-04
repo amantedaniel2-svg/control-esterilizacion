@@ -1,47 +1,101 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Control Esterilización</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-</head>
+<h1>Registro Control Central de Esterilización</h1>
 
-<body style="font-family: Arial; padding: 20px;">
+<form action="/opa" method="POST" enctype="multipart/form-data">
+  <h2>OPA</h2>
+  Técnico:
+  <select name="tecnico">
+    <option>ALLENDE VICTOR HUGO</option>
+    <option>AVALOS LAURA ANGELA</option>
+    <option>AVILA MARIA INES</option>
+  </select><br>
 
-  <h2>Registro Control en Central de Esterilización</h2>
+  PPM:
+  <input type="number" step="0.01" name="ppm"><br>
 
-  <h3>OPA</h3>
-  <form action="/opa" method="post" enctype="multipart/form-data">
-    <select name="tecnico">
-      <option>ALLENDE VICTOR HUGO</option>
-      <option>AVALOS LAURA ANGELA</option>
-      <option>AVILA MARIA INES</option>
-    </select>
-    <br/><br/>
-    <input type="number" name="ppm" placeholder="ppm" required/>
-    <br/><br/>
-    <input type="file" name="foto" required/>
-    <br/><br/>
-    <button>Guardar</button>
-  </form>
+  Foto:
+  <input type="file" name="foto"><br>
 
-  <h3>ATP</h3>
-  <form action="/atp" method="post" enctype="multipart/form-data">
-    <select name="tecnico">
-      <option>ALLENDE VICTOR HUGO</option>
-      <option>AVALOS LAURA ANGELA</option>
-    </select>
-    <br/><br/>
-    <input type="number" name="resultado" placeholder="RLU" required/>
-    <br/><br/>
-    <input type="text" name="ubicacion" placeholder="Ubicación"/>
-    <br/><br/>
-    <input type="file" name="foto" required/>
-    <br/><br/>
-    <button>Guardar</button>
-  </form>
+  <button type="submit">Guardar OPA</button>
+</form>
 
-  <br/>
-  <a href="/reporte" target="_blank">Ver Reporte</a>
+<hr>
 
-</body>
-</html>
+<form action="/temperatura" method="POST">
+  <h2>Temperatura / Humedad</h2>
+
+  Técnico:
+  <input name="tecnico"><br>
+
+  Sector:
+  <select name="sector">
+    <option>ENTREGA ESTERIL</option>
+    <option>LAVADO Y SECADO</option>
+    <option>LAVADO CIRUGIA</option>
+    <option>ACONDICIONADO CIRUGIA</option>
+    <option>ACONDICIONADO GENERAL</option>
+    <option>ACONDICIONADO TEXTIL</option>
+    <option>DEPOSITO INSUMOS</option>
+  </select><br>
+
+  Temperatura:
+  <input name="resultado"><br>
+
+  <button type="submit">Guardar</button>
+</form>
+
+<hr>
+
+<form action="/atp" method="POST" enctype="multipart/form-data">
+  <h2>ATP</h2>
+
+  Técnico:
+  <input name="tecnico"><br>
+
+  Ubicación:
+  <input name="ubicacion"><br>
+
+  Resultado:
+  <input name="resultado"><br>
+
+  Foto:
+  <input type="file" name="foto"><br>
+
+  <button type="submit">Guardar ATP</button>
+</form>
+
+<hr>
+
+<form action="/dureza" method="POST" enctype="multipart/form-data">
+  <h2>Dureza de Agua</h2>
+
+  Técnico:
+  <input name="tecnico"><br>
+
+  Resultado:
+  <select name="cumple">
+    <option>CUMPLE</option>
+    <option>NO CUMPLE</option>
+  </select><br>
+
+  Foto:
+  <input type="file" name="foto"><br>
+
+  <button type="submit">Guardar</button>
+</form>
+
+<hr>
+
+<form action="/epp" method="POST">
+  <h2>Control EPP</h2>
+
+  Técnico:
+  <input name="tecnico"><br>
+
+  Cofia <input type="checkbox" name="cofia"><br>
+  Guantes <input type="checkbox" name="guantes"><br>
+  Antiparras <input type="checkbox" name="antiparras"><br>
+  Delantal <input type="checkbox" name="delantal"><br>
+  Botas <input type="checkbox" name="botas"><br>
+
+  <button type="submit">Guardar</button>
+</form>
