@@ -46,11 +46,39 @@ app.get("/reporte", async (req, res) => {
     const { data, error } = await supabase.from("registros").select("*");
 
     if (error) {
-      console.log(error);
       return res.send("Error en consulta");
     }
 
-    res.json(data);
+    let html = `
+      <h1>Reporte de Registros</h1>
+      <table border="1" cellpadding="5">
+        <tr>
+          <th>ID</th>
+          <th>Técnico</th>
+          <th>Tipo</th>
+          <th>Resultado</th>
+          <th>Estado</th>
+          <th>Fecha</th>
+        </tr>
+    `;
+
+    data.forEach(r => {
+      html += `
+        <tr>
+          <td>${r.id}</td>
+          <td>${r.tecnico}</td>
+          <td>${r.tipo}</td>
+          <td>${r.resultado}</td>
+          <td>${r.estado || ""}</td>
+          <td>${r.fecha}</td>
+        </tr>
+      `;
+    });
+
+    html += `</table>`;
+
+    res.send(html);
+
   } catch (error) {
     res.send("Error obteniendo datos");
   }
