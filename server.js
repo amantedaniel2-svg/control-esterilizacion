@@ -6,11 +6,19 @@ const fs = require("fs");
 const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
+
 app.use(cors());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
+
+// 📁 asegurar carpeta uploads
+if (!fs.existsSync("uploads")) {
+  fs.mkdirSync("uploads");
+}
 
 const upload = multer({ dest: "uploads/" });
 
+// 🔐 SUPABASE
 const supabase = createClient(
   "https://xvzqypytfxvroedqxfbw.supabase.co",
   "sb_publishable_4ElkPdrxsNCeMVTi7woAIA_DEbbi4LX"
@@ -25,13 +33,15 @@ async function subirFoto(file) {
   try {
     const fileName = Date.now() + "-" + file.originalname;
 
+    const fileBuffer = fs.readFileSync(file.path);
+
     const { error } = await supabase.storage
       .from("fotos")
-      .upload(fileName, fs.readFileSync(file.path), {
+      .upload(fileName, fileBuffer, {
         contentType: file.mimetype
       });
 
-    fs.unlinkSync(file.path);
+    fs.unlinkSync(file.path); // eliminar archivo local
 
     if (error) {
       console.log("ERROR STORAGE:", error);
@@ -59,12 +69,20 @@ app.get("/", (req, res) => {
 });
 
 // ============================
+// TEST (para verificar rutas)
+// ============================
+app.get("/test", (req, res) => {
+  res.send("FUNCIONA OK");
+});
+
+// ============================
 // OPA
 // ============================
 app.post("/opa", upload.single("foto"), async (req, res) => {
   try {
     const { tecnico, ppm } = req.body;
-    const estado = ppm >= 0.3 ? "ACEPTADO" : "RECHAZADO";
+
+    const estado = Number(ppm) >= 0.3 ? "ACEPTADO" : "RECHAZADO";
 
     const foto_url = await subirFoto(req.file);
 
@@ -172,7 +190,7 @@ app.post("/epp", async (req, res) => {
 });
 
 // ============================
-// REPORTE (🔥 ARREGLADO)
+// REPORTE (FINAL)
 // ============================
 app.get("/reporte", async (req, res) => {
   try {
