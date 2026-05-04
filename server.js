@@ -3,7 +3,7 @@ const multer = require("multer");
 const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
-const XLSX = require("xlsx"); // ✅ NUEVO
+const XLSX = require("xlsx");
 const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
@@ -189,7 +189,7 @@ app.post("/epp", async (req, res) => {
 });
 
 // ============================
-// REPORTE (CON BOTON EXCEL)
+// REPORTE
 // ============================
 app.get("/reporte", async (req, res) => {
   try {
@@ -230,13 +230,7 @@ app.get("/reporte", async (req, res) => {
           <td>${r.tipo || ""}</td>
           <td>${r.resultado || r.cumple || ""}</td>
           <td>${r.estado || ""}</td>
-          <td>
-            ${
-              r.foto_url
-                ? `<img src="${r.foto_url}" width="100">`
-                : "Sin foto"
-            }
-          </td>
+          <td>${r.foto_url ? `<img src="${r.foto_url}" width="100">` : "Sin foto"}</td>
           <td>${r.fecha || ""}</td>
         </tr>
       `;
@@ -252,7 +246,7 @@ app.get("/reporte", async (req, res) => {
 });
 
 // ============================
-// EXCEL
+// EXCEL (🔥 MEJORADO)
 // ============================
 app.get("/excel", async (req, res) => {
   try {
@@ -261,7 +255,10 @@ app.get("/excel", async (req, res) => {
       .select("*")
       .order("id", { ascending: false });
 
-    if (error) return res.send("Error obteniendo datos");
+    if (error) {
+      console.log(error);
+      return res.send("Error obteniendo datos");
+    }
 
     const datosExcel = data.map(r => ({
       ID: r.id,
@@ -274,13 +271,21 @@ app.get("/excel", async (req, res) => {
 
     const wb = XLSX.utils.book_new();
     const ws = XLSX.utils.json_to_sheet(datosExcel);
-
     XLSX.utils.book_append_sheet(wb, ws, "Reporte");
 
-    const filePath = "reporte.xlsx";
-    XLSX.writeFile(wb, filePath);
+    // 👉 generar buffer (NO archivo físico)
+    const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
 
-    res.download(filePath);
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=reporte.xlsx"
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+
+    res.send(buffer);
 
   } catch (error) {
     console.log(error);
