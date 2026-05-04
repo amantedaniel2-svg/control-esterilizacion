@@ -15,14 +15,15 @@ const supabase = createClient(
   "sb_publishable_4ElkPdrxsNCeMVTi7woAIA_DEbbi4LX"
 );
 
+// FRONT
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
+// OPA
 app.post("/opa", upload.single("foto"), async (req, res) => {
   try {
     const { tecnico, ppm } = req.body;
-
     const estado = ppm >= 0.3 ? "ACEPTADO" : "RECHAZADO";
 
     await supabase.from("registros").insert([
@@ -41,6 +42,75 @@ app.post("/opa", upload.single("foto"), async (req, res) => {
   }
 });
 
+// TEMPERATURA
+app.post("/temperatura", async (req, res) => {
+  const { tecnico, sector, resultado } = req.body;
+
+  await supabase.from("registros").insert([
+    {
+      tecnico,
+      tipo: "TEMPERATURA",
+      resultado,
+      sector
+    }
+  ]);
+
+  res.redirect("/");
+});
+
+// ATP
+app.post("/atp", upload.single("foto"), async (req, res) => {
+  const { tecnico, resultado, ubicacion } = req.body;
+
+  await supabase.from("registros").insert([
+    {
+      tecnico,
+      tipo: "ATP",
+      resultado,
+      ubicacion
+    }
+  ]);
+
+  res.redirect("/");
+});
+
+// DUREZA
+app.post("/dureza", upload.single("foto"), async (req, res) => {
+  const { tecnico, cumple } = req.body;
+
+  await supabase.from("registros").insert([
+    {
+      tecnico,
+      tipo: "DUREZA",
+      cumple
+    }
+  ]);
+
+  res.redirect("/");
+});
+
+// EPP
+app.post("/epp", async (req, res) => {
+  const { tecnico, cofia, guantes, antiparras, delantal, botas } = req.body;
+
+  await supabase.from("registros").insert([
+    {
+      tecnico,
+      tipo: "EPP",
+      observaciones: JSON.stringify({
+        cofia: !!cofia,
+        guantes: !!guantes,
+        antiparras: !!antiparras,
+        delantal: !!delantal,
+        botas: !!botas
+      })
+    }
+  ]);
+
+  res.redirect("/");
+});
+
+// REPORTE
 app.get("/reporte", async (req, res) => {
   try {
     const { data, error } = await supabase.from("registros").select("*");
@@ -76,7 +146,6 @@ app.get("/reporte", async (req, res) => {
     });
 
     html += `</table>`;
-
     res.send(html);
 
   } catch (error) {
