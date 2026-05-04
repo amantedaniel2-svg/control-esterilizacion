@@ -142,30 +142,34 @@ app.get("/reporte", async (req, res) => {
     }
 
     let html = `
-      <h1>Reporte de Registros</h1>
-      <table border="1" cellpadding="5">
-        <tr>
-          <th>ID</th>
-          <th>Técnico</th>
-          <th>Tipo</th>
-          <th>Resultado</th>
-          <th>Estado</th>
-          <th>Fecha</th>
-        </tr>
-    `;
+  <h1>Reporte de Registros</h1>
+  <table border="1" cellpadding="5">
+    <tr>
+      <th>ID</th>
+      <th>Técnico</th>
+      <th>Tipo</th>
+      <th>Resultado</th>
+      <th>Estado</th>
+      <th>Foto</th>
+      <th>Fecha</th>
+    </tr>
+`;
 
     data.forEach(r => {
-      html += `
-        <tr>
-          <td>${r.id}</td>
-          <td>${r.tecnico}</td>
-          <td>${r.tipo}</td>
-          <td>${r.resultado}</td>
-          <td>${r.estado || ""}</td>
-          <td>${r.fecha}</td>
-        </tr>
-      `;
-    });
+  html += `
+    <tr>
+      <td>${r.id}</td>
+      <td>${r.tecnico}</td>
+      <td>${r.tipo}</td>
+      <td>${r.resultado}</td>
+      <td>${r.estado || ""}</td>
+      <td>
+        ${r.foto_url ? `<img src="${r.foto_url}" width="100">` : ""}
+      </td>
+      <td>${r.fecha}</td>
+    </tr>
+  `;
+});
 
     html += `</table>`;
     res.send(html);
