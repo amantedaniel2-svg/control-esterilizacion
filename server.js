@@ -3,6 +3,7 @@ const multer = require("multer");
 const cors = require("cors");
 const path = require("path");
 const fs = require("fs");
+const XLSX = require("xlsx"); // ✅ NUEVO
 const { createClient } = require("@supabase/supabase-js");
 
 const app = express();
@@ -32,7 +33,6 @@ async function subirFoto(file) {
 
   try {
     const fileName = Date.now() + "-" + file.originalname;
-
     const fileBuffer = fs.readFileSync(file.path);
 
     const { error } = await supabase.storage
@@ -41,7 +41,7 @@ async function subirFoto(file) {
         contentType: file.mimetype
       });
 
-    fs.unlinkSync(file.path); // eliminar archivo local
+    fs.unlinkSync(file.path);
 
     if (error) {
       console.log("ERROR STORAGE:", error);
@@ -69,7 +69,7 @@ app.get("/", (req, res) => {
 });
 
 // ============================
-// TEST (para verificar rutas)
+// TEST
 // ============================
 app.get("/test", (req, res) => {
   res.send("FUNCIONA OK");
@@ -81,7 +81,6 @@ app.get("/test", (req, res) => {
 app.post("/opa", upload.single("foto"), async (req, res) => {
   try {
     const { tecnico, ppm } = req.body;
-
     const estado = Number(ppm) >= 0.3 ? "ACEPTADO" : "RECHAZADO";
 
     const foto_url = await subirFoto(req.file);
@@ -190,7 +189,7 @@ app.post("/epp", async (req, res) => {
 });
 
 // ============================
-// REPORTE (FINAL)
+// REPORTE (CON BOTON EXCEL)
 // ============================
 app.get("/reporte", async (req, res) => {
   try {
@@ -210,6 +209,7 @@ app.get("/reporte", async (req, res) => {
 
     let html = `
       <h1>Reporte de Registros</h1>
+      <a href="/excel">📥 Descargar Excel</a><br><br>
       <table border="1" cellpadding="5">
         <tr>
           <th>ID</th>
@@ -248,6 +248,43 @@ app.get("/reporte", async (req, res) => {
   } catch (error) {
     console.log("ERROR GENERAL:", error);
     res.send("Error en servidor");
+  }
+});
+
+// ============================
+// EXCEL
+// ============================
+app.get("/excel", async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("registros")
+      .select("*")
+      .order("id", { ascending: false });
+
+    if (error) return res.send("Error obteniendo datos");
+
+    const datosExcel = data.map(r => ({
+      ID: r.id,
+      Tecnico: r.tecnico,
+      Tipo: r.tipo,
+      Resultado: r.resultado || r.cumple || "",
+      Estado: r.estado || "",
+      Fecha: r.fecha
+    }));
+
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(datosExcel);
+
+    XLSX.utils.book_append_sheet(wb, ws, "Reporte");
+
+    const filePath = "reporte.xlsx";
+    XLSX.writeFile(wb, filePath);
+
+    res.download(filePath);
+
+  } catch (error) {
+    console.log(error);
+    res.send("Error generando Excel");
   }
 });
 
