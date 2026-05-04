@@ -16,39 +16,51 @@ const supabase = createClient(
   "sb_publishable_4ElkPdrxsNCeMVTi7woAIA_DEbbi4LX"
 );
 
-// FUNCION PARA SUBIR FOTO
+// ============================
+// FUNCION SUBIR FOTO
+// ============================
 async function subirFoto(file) {
   if (!file) return null;
 
-  const fileName = Date.now() + "-" + file.originalname;
+  try {
+    const fileName = Date.now() + "-" + file.originalname;
 
-  const { error } = await supabase.storage
-    .from("fotos")
-    .upload(fileName, fs.readFileSync(file.path), {
-      contentType: file.mimetype
-    });
+    const { error } = await supabase.storage
+      .from("fotos")
+      .upload(fileName, fs.readFileSync(file.path), {
+        contentType: file.mimetype
+      });
 
-  fs.unlinkSync(file.path); // 🔥 elimina archivo local
+    fs.unlinkSync(file.path);
 
-  if (error) {
-    console.log("Error subiendo foto:", error);
+    if (error) {
+      console.log("ERROR STORAGE:", error);
+      return null;
+    }
+
+    const { data } = supabase
+      .storage
+      .from("fotos")
+      .getPublicUrl(fileName);
+
+    return data.publicUrl;
+
+  } catch (err) {
+    console.log("ERROR SUBIENDO FOTO:", err);
     return null;
   }
-
-  const { data } = supabase
-    .storage
-    .from("fotos")
-    .getPublicUrl(fileName);
-
-  return data.publicUrl;
 }
 
+// ============================
 // FRONT
+// ============================
 app.get("/", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
+// ============================
 // OPA
+// ============================
 app.post("/opa", upload.single("foto"), async (req, res) => {
   try {
     const { tecnico, ppm } = req.body;
@@ -56,9 +68,11 @@ app.post("/opa", upload.single("foto"), async (req, res) => {
 
     const foto_url = await subirFoto(req.file);
 
-    await supabase.from("registros").insert([
+    const { error } = await supabase.from("registros").insert([
       { tecnico, tipo: "OPA", resultado: ppm, estado, foto_url }
     ]);
+
+    if (error) console.log("ERROR OPA:", error);
 
     res.redirect("/");
   } catch (error) {
@@ -67,14 +81,18 @@ app.post("/opa", upload.single("foto"), async (req, res) => {
   }
 });
 
+// ============================
 // TEMPERATURA
+// ============================
 app.post("/temperatura", async (req, res) => {
   try {
     const { tecnico, sector, resultado } = req.body;
 
-    await supabase.from("registros").insert([
+    const { error } = await supabase.from("registros").insert([
       { tecnico, tipo: "TEMPERATURA", resultado, sector }
     ]);
+
+    if (error) console.log("ERROR TEMP:", error);
 
     res.redirect("/");
   } catch (error) {
@@ -82,16 +100,20 @@ app.post("/temperatura", async (req, res) => {
   }
 });
 
-// ATP (✔ ahora con foto)
+// ============================
+// ATP
+// ============================
 app.post("/atp", upload.single("foto"), async (req, res) => {
   try {
     const { tecnico, resultado, ubicacion } = req.body;
 
     const foto_url = await subirFoto(req.file);
 
-    await supabase.from("registros").insert([
+    const { error } = await supabase.from("registros").insert([
       { tecnico, tipo: "ATP", resultado, ubicacion, foto_url }
     ]);
+
+    if (error) console.log("ERROR ATP:", error);
 
     res.redirect("/");
   } catch (error) {
@@ -99,16 +121,20 @@ app.post("/atp", upload.single("foto"), async (req, res) => {
   }
 });
 
-// DUREZA (✔ ahora con foto)
+// ============================
+// DUREZA
+// ============================
 app.post("/dureza", upload.single("foto"), async (req, res) => {
   try {
     const { tecnico, cumple } = req.body;
 
     const foto_url = await subirFoto(req.file);
 
-    await supabase.from("registros").insert([
+    const { error } = await supabase.from("registros").insert([
       { tecnico, tipo: "DUREZA", cumple, foto_url }
     ]);
+
+    if (error) console.log("ERROR DUREZA:", error);
 
     res.redirect("/");
   } catch (error) {
@@ -116,12 +142,14 @@ app.post("/dureza", upload.single("foto"), async (req, res) => {
   }
 });
 
+// ============================
 // EPP
+// ============================
 app.post("/epp", async (req, res) => {
   try {
     const { tecnico, cofia, guantes, antiparras, delantal, botas } = req.body;
 
-    await supabase.from("registros").insert([
+    const { error } = await supabase.from("registros").insert([
       {
         tecnico,
         tipo: "EPP",
@@ -135,43 +163,63 @@ app.post("/epp", async (req, res) => {
       }
     ]);
 
+    if (error) console.log("ERROR EPP:", error);
+
     res.redirect("/");
   } catch (error) {
     res.send("Error EPP");
   }
 });
 
-// REPORTE
+// ============================
+// REPORTE (🔥 ARREGLADO)
+// ============================
 app.get("/reporte", async (req, res) => {
   try {
-    const { data, error } = await supabase.from("registros").select("*");
+    const { data, error } = await supabase
+      .from("registros")
+      .select("*")
+      .order("id", { ascending: false });
 
-    if (error) return res.send("Error en consulta");
+    if (error) {
+      console.log("ERROR SUPABASE:", error);
+      return res.send("Error en base de datos");
+    }
+
+    if (!data || data.length === 0) {
+      return res.send("<h2>No hay registros cargados</h2>");
+    }
 
     let html = `
-    <h1>Reporte de Registros</h1>
-    <table border="1" cellpadding="5">
-      <tr>
-        <th>ID</th>
-        <th>Técnico</th>
-        <th>Tipo</th>
-        <th>Resultado</th>
-        <th>Estado</th>
-        <th>Foto</th>
-        <th>Fecha</th>
-      </tr>
+      <h1>Reporte de Registros</h1>
+      <table border="1" cellpadding="5">
+        <tr>
+          <th>ID</th>
+          <th>Técnico</th>
+          <th>Tipo</th>
+          <th>Resultado</th>
+          <th>Estado</th>
+          <th>Foto</th>
+          <th>Fecha</th>
+        </tr>
     `;
 
     data.forEach(r => {
       html += `
         <tr>
           <td>${r.id}</td>
-          <td>${r.tecnico}</td>
-          <td>${r.tipo}</td>
+          <td>${r.tecnico || ""}</td>
+          <td>${r.tipo || ""}</td>
           <td>${r.resultado || r.cumple || ""}</td>
           <td>${r.estado || ""}</td>
-          <td>${r.foto_url ? `<img src="${r.foto_url}" width="100">` : ""}</td>
-          <td>${r.fecha}</td>
+          <td>
+            ${
+              r.foto_url
+                ? `<img src="${r.foto_url}" width="100">`
+                : "Sin foto"
+            }
+          </td>
+          <td>${r.fecha || ""}</td>
         </tr>
       `;
     });
@@ -180,10 +228,12 @@ app.get("/reporte", async (req, res) => {
     res.send(html);
 
   } catch (error) {
-    res.send("Error obteniendo datos");
+    console.log("ERROR GENERAL:", error);
+    res.send("Error en servidor");
   }
 });
 
+// ============================
 app.listen(process.env.PORT || 3000, () => {
   console.log("App funcionando");
 });
