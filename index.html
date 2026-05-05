@@ -1,180 +1,154 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <title>Control Esterilización</title>
+<meta charset="UTF-8">
+<title>Dashboard Esterilización</title>
 
-  <style>
-    body {
-      margin: 0;
-      font-family: Arial, sans-serif;
-      background: #f4f7fb;
-    }
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
-    .container {
-      display: flex;
-      height: 100vh;
-    }
+<style>
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #f4f7fb;
+}
 
-    /* SIDEBAR */
-    .sidebar {
-      width: 250px;
-      background: #0b3d91;
-      color: white;
-      padding: 20px;
-    }
+.container {
+  display: flex;
+}
 
-    .sidebar h2 {
-      margin-bottom: 30px;
-    }
+.sidebar {
+  width: 250px;
+  background: #0b3d91;
+  color: white;
+  height: 100vh;
+  padding: 20px;
+}
 
-    .menu button {
-      width: 100%;
-      margin: 5px 0;
-      padding: 12px;
-      border: none;
-      background: #1e5bd7;
-      color: white;
-      cursor: pointer;
-      border-radius: 5px;
-    }
+.sidebar button {
+  width: 100%;
+  margin: 5px 0;
+  padding: 10px;
+  background: #1e5bd7;
+  border: none;
+  color: white;
+  cursor: pointer;
+}
 
-    .menu button:hover {
-      background: #163ea6;
-    }
+.main {
+  flex: 1;
+  padding: 20px;
+}
 
-    /* MAIN */
-    .main {
-      flex: 1;
-      padding: 30px;
-      overflow-y: auto;
-    }
+.cards {
+  display: flex;
+  gap: 20px;
+}
 
-    .card {
-      background: white;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-    }
+.card {
+  background: white;
+  padding: 20px;
+  flex: 1;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 0 10px rgba(0,0,0,0.1);
+}
 
-    input, select {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
+.green { color: green; }
+.red { color: red; }
 
-    button.submit {
-      background: #0b3d91;
-      color: white;
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-
-    button.submit:hover {
-      background: #082c6c;
-    }
-  </style>
+canvas {
+  margin-top: 30px;
+  background: white;
+  padding: 20px;
+  border-radius: 10px;
+}
+</style>
 </head>
 
 <body>
 
 <div class="container">
 
-  <!-- SIDEBAR -->
   <div class="sidebar">
-    <h2>🏥 Esterilización</h2>
-
-    <div class="menu">
-      <button onclick="mostrar('opa')">OPA</button>
-      <button onclick="mostrar('temp')">Temperatura</button>
-      <button onclick="mostrar('atp')">ATP</button>
-      <button onclick="mostrar('dureza')">Dureza</button>
-      <button onclick="mostrar('epp')">EPP</button>
-
-      <hr>
-      <button onclick="window.location.href='/reporte'">📊 Reporte</button>
-      <button onclick="window.location.href='/excel'">📥 Excel</button>
-    </div>
+    <h2>🏥 Sistema</h2>
+    <button onclick="cargarDashboard()">Dashboard</button>
+    <button onclick="window.location.href='/reporte'">Reporte</button>
+    <button onclick="window.location.href='/excel'">Excel</button>
   </div>
 
-  <!-- CONTENIDO -->
   <div class="main">
 
-    <!-- OPA -->
-    <div id="opa" class="card">
-      <h2>OPA</h2>
-      <form action="/opa" method="POST" enctype="multipart/form-data">
-        <input name="tecnico" placeholder="Técnico">
-        <input name="ppm" placeholder="PPM">
-        <input type="file" name="foto">
-        <button class="submit">Guardar</button>
-      </form>
+    <h1>📊 Dashboard</h1>
+
+    <div class="cards">
+      <div class="card">
+        <h3>Total Registros</h3>
+        <h1 id="total">0</h1>
+      </div>
+
+      <div class="card">
+        <h3>OPA Aceptados</h3>
+        <h1 id="ok" class="green">0</h1>
+      </div>
+
+      <div class="card">
+        <h3>OPA Rechazados</h3>
+        <h1 id="fail" class="red">0</h1>
+      </div>
     </div>
 
-    <!-- TEMPERATURA -->
-    <div id="temp" class="card" style="display:none;">
-      <h2>Temperatura</h2>
-      <form action="/temperatura" method="POST">
-        <input name="tecnico" placeholder="Técnico">
-        <input name="sector" placeholder="Sector">
-        <input name="resultado" placeholder="Resultado">
-        <button class="submit">Guardar</button>
-      </form>
-    </div>
-
-    <!-- ATP -->
-    <div id="atp" class="card" style="display:none;">
-      <h2>ATP</h2>
-      <form action="/atp" method="POST" enctype="multipart/form-data">
-        <input name="tecnico" placeholder="Técnico">
-        <input name="ubicacion" placeholder="Ubicación">
-        <input name="resultado" placeholder="Resultado">
-        <input type="file" name="foto">
-        <button class="submit">Guardar</button>
-      </form>
-    </div>
-
-    <!-- DUREZA -->
-    <div id="dureza" class="card" style="display:none;">
-      <h2>Dureza</h2>
-      <form action="/dureza" method="POST" enctype="multipart/form-data">
-        <input name="tecnico" placeholder="Técnico">
-        <select name="cumple">
-          <option>CUMPLE</option>
-          <option>NO CUMPLE</option>
-        </select>
-        <input type="file" name="foto">
-        <button class="submit">Guardar</button>
-      </form>
-    </div>
-
-    <!-- EPP -->
-    <div id="epp" class="card" style="display:none;">
-      <h2>EPP</h2>
-      <form action="/epp" method="POST">
-        <input name="tecnico" placeholder="Técnico">
-        <label><input type="checkbox" name="cofia"> Cofia</label><br>
-        <label><input type="checkbox" name="guantes"> Guantes</label><br>
-        <label><input type="checkbox" name="antiparras"> Antiparras</label><br>
-        <label><input type="checkbox" name="delantal"> Delantal</label><br>
-        <label><input type="checkbox" name="botas"> Botas</label><br>
-        <button class="submit">Guardar</button>
-      </form>
-    </div>
+    <canvas id="grafico"></canvas>
 
   </div>
+
 </div>
 
 <script>
-function mostrar(id) {
-  document.querySelectorAll(".card").forEach(c => c.style.display = "none");
-  document.getElementById(id).style.display = "block";
+async function cargarDashboard() {
+  const res = await fetch("/api/registros");
+  const data = await res.json();
+
+  document.getElementById("total").innerText = data.length;
+
+  let ok = 0;
+  let fail = 0;
+
+  let tipos = {
+    OPA: 0,
+    ATP: 0,
+    TEMPERATURA: 0,
+    DUREZA: 0,
+    EPP: 0
+  };
+
+  data.forEach(r => {
+    if (r.estado === "ACEPTADO") ok++;
+    if (r.estado === "RECHAZADO") fail++;
+
+    if (tipos[r.tipo] !== undefined) {
+      tipos[r.tipo]++;
+    }
+  });
+
+  document.getElementById("ok").innerText = ok;
+  document.getElementById("fail").innerText = fail;
+
+  const ctx = document.getElementById("grafico").getContext("2d");
+
+  new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: Object.keys(tipos),
+      datasets: [{
+        label: "Registros",
+        data: Object.values(tipos)
+      }]
+    }
+  });
 }
+
+cargarDashboard();
 </script>
 
 </body>
