@@ -26,7 +26,7 @@ const supabase = createClient(
 );
 
 // ============================
-// FUNCION SUBIR FOTO
+// SUBIR FOTO
 // ============================
 async function subirFoto(file) {
   if (!file) return null;
@@ -48,8 +48,7 @@ async function subirFoto(file) {
       return null;
     }
 
-    const { data } = supabase
-      .storage
+    const { data } = supabase.storage
       .from("fotos")
       .getPublicUrl(fileName);
 
@@ -81,13 +80,20 @@ app.get("/test", (req, res) => {
 app.post("/opa", upload.single("foto"), async (req, res) => {
   try {
     const { tecnico, ppm } = req.body;
-    const estado = Number(ppm) >= 0.3 ? "ACEPTADO" : "RECHAZADO";
 
+    if (!tecnico || !ppm) return res.send("Faltan datos");
+
+    const estado = Number(ppm) >= 0.3 ? "ACEPTADO" : "RECHAZADO";
     const foto_url = await subirFoto(req.file);
 
-    const { error } = await supabase.from("registros").insert([
-      { tecnico, tipo: "OPA", resultado: ppm, estado, foto_url }
-    ]);
+    const { error } = await supabase.from("registros").insert([{
+      tecnico,
+      tipo: "OPA",
+      resultado: ppm,
+      estado,
+      foto_url,
+      fecha: new Date().toISOString()
+    }]);
 
     if (error) console.log("ERROR OPA:", error);
 
@@ -105,14 +111,21 @@ app.post("/temperatura", async (req, res) => {
   try {
     const { tecnico, sector, resultado } = req.body;
 
-    const { error } = await supabase.from("registros").insert([
-      { tecnico, tipo: "TEMPERATURA", resultado, sector }
-    ]);
+    if (!tecnico || !sector || !resultado)
+      return res.send("Faltan datos");
+
+    const { error } = await supabase.from("registros").insert([{
+      tecnico,
+      tipo: "TEMPERATURA",
+      resultado,
+      sector,
+      fecha: new Date().toISOString()
+    }]);
 
     if (error) console.log("ERROR TEMP:", error);
 
     res.redirect("/");
-  } catch (error) {
+  } catch {
     res.send("Error temperatura");
   }
 });
@@ -124,16 +137,24 @@ app.post("/atp", upload.single("foto"), async (req, res) => {
   try {
     const { tecnico, resultado, ubicacion } = req.body;
 
+    if (!tecnico || !resultado)
+      return res.send("Faltan datos");
+
     const foto_url = await subirFoto(req.file);
 
-    const { error } = await supabase.from("registros").insert([
-      { tecnico, tipo: "ATP", resultado, ubicacion, foto_url }
-    ]);
+    const { error } = await supabase.from("registros").insert([{
+      tecnico,
+      tipo: "ATP",
+      resultado,
+      ubicacion,
+      foto_url,
+      fecha: new Date().toISOString()
+    }]);
 
     if (error) console.log("ERROR ATP:", error);
 
     res.redirect("/");
-  } catch (error) {
+  } catch {
     res.send("Error ATP");
   }
 });
@@ -145,16 +166,23 @@ app.post("/dureza", upload.single("foto"), async (req, res) => {
   try {
     const { tecnico, cumple } = req.body;
 
+    if (!tecnico || !cumple)
+      return res.send("Faltan datos");
+
     const foto_url = await subirFoto(req.file);
 
-    const { error } = await supabase.from("registros").insert([
-      { tecnico, tipo: "DUREZA", cumple, foto_url }
-    ]);
+    const { error } = await supabase.from("registros").insert([{
+      tecnico,
+      tipo: "DUREZA",
+      cumple,
+      foto_url,
+      fecha: new Date().toISOString()
+    }]);
 
     if (error) console.log("ERROR DUREZA:", error);
 
     res.redirect("/");
-  } catch (error) {
+  } catch {
     res.send("Error dureza");
   }
 });
@@ -166,60 +194,70 @@ app.post("/epp", async (req, res) => {
   try {
     const { tecnico, cofia, guantes, antiparras, delantal, botas } = req.body;
 
-    const { error } = await supabase.from("registros").insert([
-      {
-        tecnico,
-        tipo: "EPP",
-        observaciones: JSON.stringify({
-          cofia: !!cofia,
-          guantes: !!guantes,
-          antiparras: !!antiparras,
-          delantal: !!delantal,
-          botas: !!botas
-        })
-      }
-    ]);
+    const { error } = await supabase.from("registros").insert([{
+      tecnico,
+      tipo: "EPP",
+      observaciones: JSON.stringify({
+        cofia: !!cofia,
+        guantes: !!guantes,
+        antiparras: !!antiparras,
+        delantal: !!delantal,
+        botas: !!botas
+      }),
+      fecha: new Date().toISOString()
+    }]);
 
     if (error) console.log("ERROR EPP:", error);
 
     res.redirect("/");
-  } catch (error) {
+  } catch {
     res.send("Error EPP");
   }
 });
 
 // ============================
-// REPORTE
+// REPORTE CON FILTROS
 // ============================
 app.get("/reporte", async (req, res) => {
   try {
-    const { data, error } = await supabase
+    const { tipo, tecnico } = req.query;
+
+    let query = supabase
       .from("registros")
       .select("*")
       .order("id", { ascending: false });
 
-    if (error) {
-      console.log("ERROR SUPABASE:", error);
-      return res.send("Error en base de datos");
-    }
+    if (tipo) query = query.eq("tipo", tipo);
+    if (tecnico) query = query.eq("tecnico", tecnico);
 
-    if (!data || data.length === 0) {
-      return res.send("<h2>No hay registros cargados</h2>");
-    }
+    const { data, error } = await query;
+
+    if (error) return res.send("Error en base de datos");
 
     let html = `
-      <h1>Reporte de Registros</h1>
-      <a href="/excel">📥 Descargar Excel</a><br><br>
-      <table border="1" cellpadding="5">
-        <tr>
-          <th>ID</th>
-          <th>Técnico</th>
-          <th>Tipo</th>
-          <th>Resultado</th>
-          <th>Estado</th>
-          <th>Foto</th>
-          <th>Fecha</th>
-        </tr>
+      <h1>Reporte</h1>
+
+      <form method="GET" action="/reporte">
+        Tipo:
+        <select name="tipo">
+          <option value="">TODOS</option>
+          <option>OPA</option>
+          <option>ATP</option>
+          <option>TEMPERATURA</option>
+          <option>DUREZA</option>
+          <option>EPP</option>
+        </select>
+
+        Técnico:
+        <input name="tecnico">
+
+        <button type="submit">Filtrar</button>
+      </form>
+
+      <br>
+      <a href="/excel?tipo=${tipo || ""}&tecnico=${tecnico || ""}">📥 Excel</a>
+
+      <table border="1">
     `;
 
     data.forEach(r => {
@@ -230,7 +268,15 @@ app.get("/reporte", async (req, res) => {
           <td>${r.tipo || ""}</td>
           <td>${r.resultado || r.cumple || ""}</td>
           <td>${r.estado || ""}</td>
-          <td>${r.foto_url ? `<img src="${r.foto_url}" width="100">` : "Sin foto"}</td>
+          <td>
+            ${
+              r.foto_url
+                ? `<a href="${r.foto_url}" target="_blank">
+                     <img src="${r.foto_url}" width="80">
+                   </a>`
+                : "Sin foto"
+            }
+          </td>
           <td>${r.fecha || ""}</td>
         </tr>
       `;
@@ -240,25 +286,26 @@ app.get("/reporte", async (req, res) => {
     res.send(html);
 
   } catch (error) {
-    console.log("ERROR GENERAL:", error);
-    res.send("Error en servidor");
+    console.log(error);
+    res.send("Error servidor");
   }
 });
 
 // ============================
-// EXCEL (🔥 MEJORADO)
+// EXCEL CON FILTROS
 // ============================
 app.get("/excel", async (req, res) => {
   try {
-    const { data, error } = await supabase
-      .from("registros")
-      .select("*")
-      .order("id", { ascending: false });
+    const { tipo, tecnico } = req.query;
 
-    if (error) {
-      console.log(error);
-      return res.send("Error obteniendo datos");
-    }
+    let query = supabase.from("registros").select("*");
+
+    if (tipo) query = query.eq("tipo", tipo);
+    if (tecnico) query = query.eq("tecnico", tecnico);
+
+    const { data, error } = await query;
+
+    if (error) return res.send("Error datos");
 
     const datosExcel = data.map(r => ({
       ID: r.id,
@@ -273,23 +320,15 @@ app.get("/excel", async (req, res) => {
     const ws = XLSX.utils.json_to_sheet(datosExcel);
     XLSX.utils.book_append_sheet(wb, ws, "Reporte");
 
-    // 👉 generar buffer (NO archivo físico)
     const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
 
-    res.setHeader(
-      "Content-Disposition",
-      "attachment; filename=reporte.xlsx"
-    );
-    res.setHeader(
-      "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-    );
+    res.setHeader("Content-Disposition", "attachment; filename=reporte.xlsx");
+    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
     res.send(buffer);
 
   } catch (error) {
-    console.log(error);
-    res.send("Error generando Excel");
+    res.send("Error Excel");
   }
 });
 
