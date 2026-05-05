@@ -1,132 +1,195 @@
-<h1>Registro Control Central de Esterilización</h1>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Control de Esterilización</title>
 
-<script>
-const tecnicos = [
-"ALLENDE VICTOR HUGO","AVALOS LAURA ANGELA","AVILA MARIA INES",
-"BARRIONUEVO ERICA CECILIA","CARMONA FABIANA","CONDORI CHAVEZ VALERIA CLAUDIA",
-"FAJARDO VALERIA","GALEAN DANIELA FERNANDA","GIUPPONI MARIA CRISTINA",
-"GONZALEZ MICHELLE VERONICA","HENRIQUEZ DAINA NISELA","LEZCANO ERICA DIANA",
-"LEZCANO JERONIMO EZEQUIEL","MALDONADO NATALIA SOLEDAD","MANCUSO MARINA VERONICA",
-"MONTEROS MIGUEL ANGEL","POSDELEY MARTHA ELIZABETH","PAVON LAUTARO LEONEL",
-"RIDDLE ALEXIS","RODRIGUEZ HORACIO FLORENCIO","RODRIGUEZ LILIANA KARINA",
-"SANTOS ALFREDO ANTONIO","SAYES YANINA SUSANA","SOSA MARCELO JAVIER",
-"SERRANO DANIEL FRANCISCO","SUTER LEILA YANINA VANESA","TERRAZAS KURT",
-"VARELA SILVINA DANIELA","VARGAS LUIS GREGORIO"
-];
-
-function cargarTecnicos() {
-  document.querySelectorAll(".tecnico").forEach(select => {
-    select.innerHTML = "<option value=''>-- Seleccionar Técnico --</option>";
-    tecnicos.forEach(t => {
-      const op = document.createElement("option");
-      op.value = t;
-      op.textContent = t;
-      select.appendChild(op);
-    });
-  });
+<style>
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f6f9;
 }
 
-window.onload = cargarTecnicos;
-</script>
+/* SIDEBAR */
+.sidebar {
+  width: 220px;
+  height: 100vh;
+  background: #1e3a5f;
+  color: white;
+  position: fixed;
+  padding: 20px;
+}
+
+.sidebar h2 {
+  margin-bottom: 30px;
+}
+
+.sidebar a {
+  display: block;
+  color: white;
+  text-decoration: none;
+  margin: 10px 0;
+}
+
+.sidebar a:hover {
+  text-decoration: underline;
+}
+
+/* MAIN */
+.main {
+  margin-left: 240px;
+  padding: 20px;
+}
+
+/* CARDS */
+.card {
+  background: white;
+  padding: 20px;
+  margin-bottom: 20px;
+  border-radius: 10px;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+h1 {
+  color: #1e3a5f;
+}
+
+button {
+  background: #1e3a5f;
+  color: white;
+  border: none;
+  padding: 10px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #16304d;
+}
+
+input, select {
+  width: 100%;
+  padding: 8px;
+  margin: 5px 0 10px 0;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="sidebar">
+  <h2>🏥 Esterilización</h2>
+  <a href="/">Inicio</a>
+  <a href="/reporte">📊 Reporte</a>
+  <a href="/excel">📥 Excel</a>
+</div>
+
+<div class="main">
+
+<h1>Control Central de Esterilización</h1>
 
 <!-- OPA -->
-<form action="/opa" method="POST" enctype="multipart/form-data">
-  <h2>OPA</h2>
+<div class="card">
+  <h3>OPA</h3>
+  <form action="/opa" method="POST" enctype="multipart/form-data">
+    Técnico:
+    <input name="tecnico" required>
 
-  Técnico:
-  <select name="tecnico" class="tecnico" required></select><br>
+    PPM:
+    <input type="number" step="0.01" name="ppm" required>
 
-  PPM:
-  <input type="number" step="0.01" name="ppm" required><br>
+    Foto:
+    <input type="file" name="foto">
 
-  Foto:
-  <input type="file" name="foto"><br>
-
-  <button type="submit">Guardar OPA</button>
-</form>
-
-<hr>
+    <button>Guardar</button>
+  </form>
+</div>
 
 <!-- TEMPERATURA -->
-<form action="/temperatura" method="POST">
-  <h2>Temperatura / Humedad</h2>
+<div class="card">
+  <h3>Temperatura / Humedad</h3>
+  <form action="/temperatura" method="POST">
 
-  Técnico:
-  <select name="tecnico" class="tecnico" required></select><br>
+    Técnico:
+    <input name="tecnico">
 
-  Sector:
-  <select name="sector">
-    <option>ENTREGA ESTERIL</option>
-    <option>LAVADO Y SECADO</option>
-    <option>LAVADO CIRUGIA</option>
-    <option>ACONDICIONADO CIRUGIA</option>
-    <option>ACONDICIONADO GENERAL</option>
-    <option>ACONDICIONADO TEXTIL</option>
-    <option>DEPOSITO INSUMOS</option>
-  </select><br>
+    Sector:
+    <select name="sector">
+      <option>ENTREGA ESTERIL</option>
+      <option>LAVADO</option>
+      <option>CIRUGIA</option>
+    </select>
 
-  Temperatura:
-  <input name="resultado" required><br>
+    Resultado:
+    <input name="resultado">
 
-  <button type="submit">Guardar</button>
-</form>
-
-<hr>
+    <button>Guardar</button>
+  </form>
+</div>
 
 <!-- ATP -->
-<form action="/atp" method="POST" enctype="multipart/form-data">
-  <h2>ATP</h2>
+<div class="card">
+  <h3>ATP</h3>
+  <form action="/atp" method="POST" enctype="multipart/form-data">
 
-  Técnico:
-  <select name="tecnico" class="tecnico" required></select><br>
+    Técnico:
+    <input name="tecnico">
 
-  Ubicación:
-  <input name="ubicacion"><br>
+    Ubicación:
+    <input name="ubicacion">
 
-  Resultado:
-  <input name="resultado"><br>
+    Resultado:
+    <input name="resultado">
 
-  Foto:
-  <input type="file" name="foto"><br>
+    Foto:
+    <input type="file" name="foto">
 
-  <button type="submit">Guardar ATP</button>
-</form>
-
-<hr>
+    <button>Guardar</button>
+  </form>
+</div>
 
 <!-- DUREZA -->
-<form action="/dureza" method="POST" enctype="multipart/form-data">
-  <h2>Dureza de Agua</h2>
+<div class="card">
+  <h3>Dureza de Agua</h3>
+  <form action="/dureza" method="POST" enctype="multipart/form-data">
 
-  Técnico:
-  <select name="tecnico" class="tecnico" required></select><br>
+    Técnico:
+    <input name="tecnico">
 
-  Resultado:
-  <select name="cumple">
-    <option>CUMPLE</option>
-    <option>NO CUMPLE</option>
-  </select><br>
+    Resultado:
+    <select name="cumple">
+      <option>CUMPLE</option>
+      <option>NO CUMPLE</option>
+    </select>
 
-  Foto:
-  <input type="file" name="foto"><br>
+    Foto:
+    <input type="file" name="foto">
 
-  <button type="submit">Guardar</button>
-</form>
-
-<hr>
+    <button>Guardar</button>
+  </form>
+</div>
 
 <!-- EPP -->
-<form action="/epp" method="POST">
-  <h2>Control EPP</h2>
+<div class="card">
+  <h3>Control EPP</h3>
+  <form action="/epp" method="POST">
 
-  Técnico:
-  <select name="tecnico" class="tecnico" required></select><br>
+    Técnico:
+    <input name="tecnico">
 
-  Cofia <input type="checkbox" name="cofia"><br>
-  Guantes <input type="checkbox" name="guantes"><br>
-  Antiparras <input type="checkbox" name="antiparras"><br>
-  Delantal <input type="checkbox" name="delantal"><br>
-  Botas <input type="checkbox" name="botas"><br>
+    <label><input type="checkbox" name="cofia"> Cofia</label><br>
+    <label><input type="checkbox" name="guantes"> Guantes</label><br>
+    <label><input type="checkbox" name="antiparras"> Antiparras</label><br>
+    <label><input type="checkbox" name="delantal"> Delantal</label><br>
+    <label><input type="checkbox" name="botas"> Botas</label><br>
 
-  <button type="submit">Guardar</button>
-</form>
+    <button>Guardar</button>
+  </form>
+</div>
+
+</div>
+
+</body>
+</html>
