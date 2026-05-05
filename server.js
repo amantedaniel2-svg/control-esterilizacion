@@ -12,14 +12,24 @@ app.use(cors());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-// 📁 asegurar carpeta uploads
+// ============================
+// CONFIG LOGIN
+// ============================
+const USER = "admin";
+const PASS = "1234";
+
+// ============================
+// CREAR CARPETA uploads
+// ============================
 if (!fs.existsSync("uploads")) {
   fs.mkdirSync("uploads");
 }
 
 const upload = multer({ dest: "uploads/" });
 
-// 🔐 SUPABASE
+// ============================
+// SUPABASE
+// ============================
 const supabase = createClient(
   "https://xvzqypytfxvroedqxfbw.supabase.co",
   "sb_publishable_4ElkPdrxsNCeMVTi7woAIA_DEbbi4LX"
@@ -33,11 +43,11 @@ async function subirFoto(file) {
 
   try {
     const fileName = Date.now() + "-" + file.originalname;
-    const fileBuffer = fs.readFileSync(file.path);
+    const buffer = fs.readFileSync(file.path);
 
     const { error } = await supabase.storage
       .from("fotos")
-      .upload(fileName, fileBuffer, {
+      .upload(fileName, buffer, {
         contentType: file.mimetype
       });
 
@@ -55,10 +65,34 @@ async function subirFoto(file) {
     return data.publicUrl;
 
   } catch (err) {
-    console.log("ERROR SUBIENDO FOTO:", err);
+    console.log("ERROR FOTO:", err);
     return null;
   }
 }
+
+// ============================
+// LOGIN
+// ============================
+app.get("/login", (req, res) => {
+  res.send(`
+    <h2>Login</h2>
+    <form method="POST">
+      Usuario: <input name="user"><br>
+      Password: <input type="password" name="pass"><br>
+      <button>Entrar</button>
+    </form>
+  `);
+});
+
+app.post("/login", (req, res) => {
+  const { user, pass } = req.body;
+
+  if (user === USER && pass === PASS) {
+    res.redirect("/");
+  } else {
+    res.send("Login incorrecto");
+  }
+});
 
 // ============================
 // FRONT
@@ -80,26 +114,18 @@ app.get("/test", (req, res) => {
 app.post("/opa", upload.single("foto"), async (req, res) => {
   try {
     const { tecnico, ppm } = req.body;
-
-    if (!tecnico || !ppm) return res.send("Faltan datos");
-
     const estado = Number(ppm) >= 0.3 ? "ACEPTADO" : "RECHAZADO";
+
     const foto_url = await subirFoto(req.file);
 
-    const { error } = await supabase.from("registros").insert([{
-      tecnico,
-      tipo: "OPA",
-      resultado: ppm,
-      estado,
-      foto_url,
-      fecha: new Date().toISOString()
-    }]);
+    const { error } = await supabase.from("registros").insert([
+      { tecnico, tipo: "OPA", resultado: ppm, estado, foto_url }
+    ]);
 
-    if (error) console.log("ERROR OPA:", error);
+    if (error) console.log(error);
 
     res.redirect("/");
-  } catch (error) {
-    console.log(error);
+  } catch {
     res.send("Error OPA");
   }
 });
@@ -111,18 +137,9 @@ app.post("/temperatura", async (req, res) => {
   try {
     const { tecnico, sector, resultado } = req.body;
 
-    if (!tecnico || !sector || !resultado)
-      return res.send("Faltan datos");
-
-    const { error } = await supabase.from("registros").insert([{
-      tecnico,
-      tipo: "TEMPERATURA",
-      resultado,
-      sector,
-      fecha: new Date().toISOString()
-    }]);
-
-    if (error) console.log("ERROR TEMP:", error);
+    await supabase.from("registros").insert([
+      { tecnico, tipo: "TEMPERATURA", resultado, sector }
+    ]);
 
     res.redirect("/");
   } catch {
@@ -137,21 +154,11 @@ app.post("/atp", upload.single("foto"), async (req, res) => {
   try {
     const { tecnico, resultado, ubicacion } = req.body;
 
-    if (!tecnico || !resultado)
-      return res.send("Faltan datos");
-
     const foto_url = await subirFoto(req.file);
 
-    const { error } = await supabase.from("registros").insert([{
-      tecnico,
-      tipo: "ATP",
-      resultado,
-      ubicacion,
-      foto_url,
-      fecha: new Date().toISOString()
-    }]);
-
-    if (error) console.log("ERROR ATP:", error);
+    await supabase.from("registros").insert([
+      { tecnico, tipo: "ATP", resultado, ubicacion, foto_url }
+    ]);
 
     res.redirect("/");
   } catch {
@@ -166,20 +173,11 @@ app.post("/dureza", upload.single("foto"), async (req, res) => {
   try {
     const { tecnico, cumple } = req.body;
 
-    if (!tecnico || !cumple)
-      return res.send("Faltan datos");
-
     const foto_url = await subirFoto(req.file);
 
-    const { error } = await supabase.from("registros").insert([{
-      tecnico,
-      tipo: "DUREZA",
-      cumple,
-      foto_url,
-      fecha: new Date().toISOString()
-    }]);
-
-    if (error) console.log("ERROR DUREZA:", error);
+    await supabase.from("registros").insert([
+      { tecnico, tipo: "DUREZA", cumple, foto_url }
+    ]);
 
     res.redirect("/");
   } catch {
@@ -194,20 +192,19 @@ app.post("/epp", async (req, res) => {
   try {
     const { tecnico, cofia, guantes, antiparras, delantal, botas } = req.body;
 
-    const { error } = await supabase.from("registros").insert([{
-      tecnico,
-      tipo: "EPP",
-      observaciones: JSON.stringify({
-        cofia: !!cofia,
-        guantes: !!guantes,
-        antiparras: !!antiparras,
-        delantal: !!delantal,
-        botas: !!botas
-      }),
-      fecha: new Date().toISOString()
-    }]);
-
-    if (error) console.log("ERROR EPP:", error);
+    await supabase.from("registros").insert([
+      {
+        tecnico,
+        tipo: "EPP",
+        observaciones: JSON.stringify({
+          cofia: !!cofia,
+          guantes: !!guantes,
+          antiparras: !!antiparras,
+          delantal: !!delantal,
+          botas: !!botas
+        })
+      }
+    ]);
 
     res.redirect("/");
   } catch {
@@ -216,167 +213,120 @@ app.post("/epp", async (req, res) => {
 });
 
 // ============================
-// REPORTE CON FILTROS
+// DASHBOARD
 // ============================
-app.get("/reporte", async (req, res) => {
-  try {
-    const { tipo, tecnico } = req.query;
+app.get("/dashboard", async (req, res) => {
+  const { data } = await supabase.from("registros").select("*");
 
-    let query = supabase
-      .from("registros")
-      .select("*")
-      .order("id", { ascending: false });
+  const total = data.length;
 
-    if (tipo) query = query.eq("tipo", tipo);
-    if (tecnico) query = query.eq("tecnico", tecnico);
+  const contar = tipo => data.filter(r => r.tipo === tipo).length;
 
-    const { data, error } = await query;
+  res.send(`
+    <h1>📊 Dashboard</h1>
+    <p>Total: ${total}</p>
+    <p>OPA: ${contar("OPA")}</p>
+    <p>ATP: ${contar("ATP")}</p>
+    <p>TEMP: ${contar("TEMPERATURA")}</p>
+    <p>DUREZA: ${contar("DUREZA")}</p>
+    <p>EPP: ${contar("EPP")}</p>
 
-    if (error) return res.send("Error en base de datos");
-
-    let html = `
-      <h1>Reporte</h1>
-
-      <form method="GET" action="/reporte">
-        Tipo:
-        <select name="tipo">
-          <option value="">TODOS</option>
-          <option>OPA</option>
-          <option>ATP</option>
-          <option>TEMPERATURA</option>
-          <option>DUREZA</option>
-          <option>EPP</option>
-        </select>
-
-        Técnico:
-        <input name="tecnico">
-
-        <button type="submit">Filtrar</button>
-      </form>
-
-      <br>
-      <a href="/excel?tipo=${tipo || ""}&tecnico=${tecnico || ""}">📥 Excel</a>
-
-      <table border="1">
-    `;
-
-    data.forEach(r => {
-      html += `
-        <tr>
-          <td>${r.id}</td>
-          <td>${r.tecnico || ""}</td>
-          <td>${r.tipo || ""}</td>
-          <td>${r.resultado || r.cumple || ""}</td>
-          <td>${r.estado || ""}</td>
-          <td>
-            ${
-              r.foto_url
-                ? `<a href="${r.foto_url}" target="_blank">
-                     <img src="${r.foto_url}" width="80">
-                   </a>`
-                : "Sin foto"
-            }
-          </td>
-          <td>${r.fecha || ""}</td>
-        </tr>
-      `;
-    });
-
-    html += `</table>`;
-    res.send(html);
-
-  } catch (error) {
-    console.log(error);
-    res.send("Error servidor");
-  }
+    <br><a href="/">Inicio</a>
+    <br><a href="/reporte">Reporte</a>
+  `);
 });
 
 // ============================
-// EXCEL CON FILTROS
+// REPORTE CON FILTRO
+// ============================
+app.get("/reporte", async (req, res) => {
+  let query = supabase.from("registros").select("*");
+
+  if (req.query.tecnico)
+    query = query.eq("tecnico", req.query.tecnico);
+
+  if (req.query.tipo)
+    query = query.eq("tipo", req.query.tipo);
+
+  const { data } = await query.order("id", { ascending: false });
+
+  let html = `
+    <h1>Reporte</h1>
+
+    <form>
+      Técnico: <input name="tecnico">
+      Tipo:
+      <select name="tipo">
+        <option value="">Todos</option>
+        <option>OPA</option>
+        <option>ATP</option>
+        <option>TEMPERATURA</option>
+        <option>DUREZA</option>
+        <option>EPP</option>
+      </select>
+      <button>Filtrar</button>
+    </form>
+
+    <br>
+    <a href="/excel">Excel</a> | 
+    <a href="/dashboard">Dashboard</a>
+
+    <table border="1">
+  `;
+
+  data.forEach(r => {
+    html += `
+      <tr>
+        <td>${r.id}</td>
+        <td>${r.tecnico}</td>
+        <td>${r.tipo}</td>
+        <td>${r.resultado || r.cumple || ""}</td>
+        <td>${r.estado || ""}</td>
+        <td>${r.foto_url ? `<img src="${r.foto_url}" width="80">` : ""}</td>
+        <td>${r.fecha || ""}</td>
+      </tr>
+    `;
+  });
+
+  html += "</table>";
+
+  res.send(html);
+});
+
+// ============================
+// EXCEL (PRO)
 // ============================
 app.get("/excel", async (req, res) => {
-  try {
-    const { tipo, tecnico } = req.query;
+  const { data } = await supabase
+    .from("registros")
+    .select("*")
+    .order("id", { ascending: false });
 
-    let query = supabase.from("registros").select("*");
+  const json = data.map(r => ({
+    ID: r.id,
+    Tecnico: r.tecnico,
+    Tipo: r.tipo,
+    Resultado: r.resultado || r.cumple || "",
+    Estado: r.estado || "",
+    Fecha: r.fecha
+  }));
 
-    if (tipo) query = query.eq("tipo", tipo);
-    if (tecnico) query = query.eq("tecnico", tecnico);
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.json_to_sheet(json);
+  XLSX.utils.book_append_sheet(wb, ws, "Reporte");
 
-    const { data, error } = await query;
+  const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
 
-    if (error) return res.send("Error datos");
+  res.setHeader("Content-Disposition", "attachment; filename=reporte.xlsx");
+  res.setHeader(
+    "Content-Type",
+    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+  );
 
-    const datosExcel = data.map(r => ({
-      ID: r.id,
-      Tecnico: r.tecnico,
-      Tipo: r.tipo,
-      Resultado: r.resultado || r.cumple || "",
-      Estado: r.estado || "",
-      Fecha: r.fecha
-    }));
-
-    const wb = XLSX.utils.book_new();
-    const ws = XLSX.utils.json_to_sheet(datosExcel);
-    XLSX.utils.book_append_sheet(wb, ws, "Reporte");
-
-    const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" });
-
-    res.setHeader("Content-Disposition", "attachment; filename=reporte.xlsx");
-    res.setHeader("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
-
-    res.send(buffer);
-
-  } catch (error) {
-    res.send("Error Excel");
-  }
+  res.send(buffer);
 });
 
 // ============================
 app.listen(process.env.PORT || 3000, () => {
-  console.log("App funcionando");
-});
-
-// ============================
-// DASHBOARD
-// ============================
-app.get("/dashboard", async (req, res) => {
-  try {
-    const { data, error } = await supabase
-      .from("registros")
-      .select("*");
-
-    if (error) return res.send("Error cargando dashboard");
-
-    const total = data.length;
-
-    const conteo = {
-      OPA: data.filter(r => r.tipo === "OPA").length,
-      ATP: data.filter(r => r.tipo === "ATP").length,
-      TEMPERATURA: data.filter(r => r.tipo === "TEMPERATURA").length,
-      DUREZA: data.filter(r => r.tipo === "DUREZA").length,
-      EPP: data.filter(r => r.tipo === "EPP").length
-    };
-
-    let html = `
-    <h1>📊 Dashboard</h1>
-
-    <div style="display:flex;gap:20px;flex-wrap:wrap;">
-      <div style="background:#1e3a5f;color:white;padding:20px;border-radius:10px;">Total: ${total}</div>
-      <div style="background:#4caf50;color:white;padding:20px;border-radius:10px;">OPA: ${conteo.OPA}</div>
-      <div style="background:#2196f3;color:white;padding:20px;border-radius:10px;">ATP: ${conteo.ATP}</div>
-      <div style="background:#ff9800;color:white;padding:20px;border-radius:10px;">TEMP: ${conteo.TEMPERATURA}</div>
-      <div style="background:#9c27b0;color:white;padding:20px;border-radius:10px;">DUREZA: ${conteo.DUREZA}</div>
-      <div style="background:#607d8b;color:white;padding:20px;border-radius:10px;">EPP: ${conteo.EPP}</div>
-    </div>
-
-    <br><a href="/">⬅ Volver</a>
-    <br><a href="/reporte">📋 Ver reporte</a>
-    `;
-
-    res.send(html);
-
-  } catch (error) {
-    res.send("Error dashboard");
-  }
+  console.log("App funcionando 🚀");
 });
