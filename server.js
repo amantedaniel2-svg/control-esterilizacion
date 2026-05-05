@@ -336,3 +336,47 @@ app.get("/excel", async (req, res) => {
 app.listen(process.env.PORT || 3000, () => {
   console.log("App funcionando");
 });
+
+// ============================
+// DASHBOARD
+// ============================
+app.get("/dashboard", async (req, res) => {
+  try {
+    const { data, error } = await supabase
+      .from("registros")
+      .select("*");
+
+    if (error) return res.send("Error cargando dashboard");
+
+    const total = data.length;
+
+    const conteo = {
+      OPA: data.filter(r => r.tipo === "OPA").length,
+      ATP: data.filter(r => r.tipo === "ATP").length,
+      TEMPERATURA: data.filter(r => r.tipo === "TEMPERATURA").length,
+      DUREZA: data.filter(r => r.tipo === "DUREZA").length,
+      EPP: data.filter(r => r.tipo === "EPP").length
+    };
+
+    let html = `
+    <h1>📊 Dashboard</h1>
+
+    <div style="display:flex;gap:20px;flex-wrap:wrap;">
+      <div style="background:#1e3a5f;color:white;padding:20px;border-radius:10px;">Total: ${total}</div>
+      <div style="background:#4caf50;color:white;padding:20px;border-radius:10px;">OPA: ${conteo.OPA}</div>
+      <div style="background:#2196f3;color:white;padding:20px;border-radius:10px;">ATP: ${conteo.ATP}</div>
+      <div style="background:#ff9800;color:white;padding:20px;border-radius:10px;">TEMP: ${conteo.TEMPERATURA}</div>
+      <div style="background:#9c27b0;color:white;padding:20px;border-radius:10px;">DUREZA: ${conteo.DUREZA}</div>
+      <div style="background:#607d8b;color:white;padding:20px;border-radius:10px;">EPP: ${conteo.EPP}</div>
+    </div>
+
+    <br><a href="/">⬅ Volver</a>
+    <br><a href="/reporte">📋 Ver reporte</a>
+    `;
+
+    res.send(html);
+
+  } catch (error) {
+    res.send("Error dashboard");
+  }
+});
