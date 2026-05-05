@@ -1,195 +1,181 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<title>Control de Esterilización</title>
+  <meta charset="UTF-8">
+  <title>Control Esterilización</title>
 
-<style>
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f6f9;
-}
+  <style>
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f7fb;
+    }
 
-/* SIDEBAR */
-.sidebar {
-  width: 220px;
-  height: 100vh;
-  background: #1e3a5f;
-  color: white;
-  position: fixed;
-  padding: 20px;
-}
+    .container {
+      display: flex;
+      height: 100vh;
+    }
 
-.sidebar h2 {
-  margin-bottom: 30px;
-}
+    /* SIDEBAR */
+    .sidebar {
+      width: 250px;
+      background: #0b3d91;
+      color: white;
+      padding: 20px;
+    }
 
-.sidebar a {
-  display: block;
-  color: white;
-  text-decoration: none;
-  margin: 10px 0;
-}
+    .sidebar h2 {
+      margin-bottom: 30px;
+    }
 
-.sidebar a:hover {
-  text-decoration: underline;
-}
+    .menu button {
+      width: 100%;
+      margin: 5px 0;
+      padding: 12px;
+      border: none;
+      background: #1e5bd7;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+    }
 
-/* MAIN */
-.main {
-  margin-left: 240px;
-  padding: 20px;
-}
+    .menu button:hover {
+      background: #163ea6;
+    }
 
-/* CARDS */
-.card {
-  background: white;
-  padding: 20px;
-  margin-bottom: 20px;
-  border-radius: 10px;
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-}
+    /* MAIN */
+    .main {
+      flex: 1;
+      padding: 30px;
+      overflow-y: auto;
+    }
 
-h1 {
-  color: #1e3a5f;
-}
+    .card {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
 
-button {
-  background: #1e3a5f;
-  color: white;
-  border: none;
-  padding: 10px;
-  border-radius: 5px;
-  cursor: pointer;
-}
+    input, select {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
 
-button:hover {
-  background: #16304d;
-}
+    button.submit {
+      background: #0b3d91;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
 
-input, select {
-  width: 100%;
-  padding: 8px;
-  margin: 5px 0 10px 0;
-}
-</style>
-
+    button.submit:hover {
+      background: #082c6c;
+    }
+  </style>
 </head>
 
 <body>
 
-<div class="sidebar">
-  <h2>🏥 Esterilización</h2>
-  <a href="/">Inicio</a>
-  <a href="/reporte">📊 Reporte</a>
-  <a href="/excel">📥 Excel</a>
+<div class="container">
+
+  <!-- SIDEBAR -->
+  <div class="sidebar">
+    <h2>🏥 Esterilización</h2>
+
+    <div class="menu">
+      <button onclick="mostrar('opa')">OPA</button>
+      <button onclick="mostrar('temp')">Temperatura</button>
+      <button onclick="mostrar('atp')">ATP</button>
+      <button onclick="mostrar('dureza')">Dureza</button>
+      <button onclick="mostrar('epp')">EPP</button>
+
+      <hr>
+      <button onclick="window.location.href='/reporte'">📊 Reporte</button>
+      <button onclick="window.location.href='/excel'">📥 Excel</button>
+    </div>
+  </div>
+
+  <!-- CONTENIDO -->
+  <div class="main">
+
+    <!-- OPA -->
+    <div id="opa" class="card">
+      <h2>OPA</h2>
+      <form action="/opa" method="POST" enctype="multipart/form-data">
+        <input name="tecnico" placeholder="Técnico">
+        <input name="ppm" placeholder="PPM">
+        <input type="file" name="foto">
+        <button class="submit">Guardar</button>
+      </form>
+    </div>
+
+    <!-- TEMPERATURA -->
+    <div id="temp" class="card" style="display:none;">
+      <h2>Temperatura</h2>
+      <form action="/temperatura" method="POST">
+        <input name="tecnico" placeholder="Técnico">
+        <input name="sector" placeholder="Sector">
+        <input name="resultado" placeholder="Resultado">
+        <button class="submit">Guardar</button>
+      </form>
+    </div>
+
+    <!-- ATP -->
+    <div id="atp" class="card" style="display:none;">
+      <h2>ATP</h2>
+      <form action="/atp" method="POST" enctype="multipart/form-data">
+        <input name="tecnico" placeholder="Técnico">
+        <input name="ubicacion" placeholder="Ubicación">
+        <input name="resultado" placeholder="Resultado">
+        <input type="file" name="foto">
+        <button class="submit">Guardar</button>
+      </form>
+    </div>
+
+    <!-- DUREZA -->
+    <div id="dureza" class="card" style="display:none;">
+      <h2>Dureza</h2>
+      <form action="/dureza" method="POST" enctype="multipart/form-data">
+        <input name="tecnico" placeholder="Técnico">
+        <select name="cumple">
+          <option>CUMPLE</option>
+          <option>NO CUMPLE</option>
+        </select>
+        <input type="file" name="foto">
+        <button class="submit">Guardar</button>
+      </form>
+    </div>
+
+    <!-- EPP -->
+    <div id="epp" class="card" style="display:none;">
+      <h2>EPP</h2>
+      <form action="/epp" method="POST">
+        <input name="tecnico" placeholder="Técnico">
+        <label><input type="checkbox" name="cofia"> Cofia</label><br>
+        <label><input type="checkbox" name="guantes"> Guantes</label><br>
+        <label><input type="checkbox" name="antiparras"> Antiparras</label><br>
+        <label><input type="checkbox" name="delantal"> Delantal</label><br>
+        <label><input type="checkbox" name="botas"> Botas</label><br>
+        <button class="submit">Guardar</button>
+      </form>
+    </div>
+
+  </div>
 </div>
 
-<div class="main">
-
-<h1>Control Central de Esterilización</h1>
-
-<!-- OPA -->
-<div class="card">
-  <h3>OPA</h3>
-  <form action="/opa" method="POST" enctype="multipart/form-data">
-    Técnico:
-    <input name="tecnico" required>
-
-    PPM:
-    <input type="number" step="0.01" name="ppm" required>
-
-    Foto:
-    <input type="file" name="foto">
-
-    <button>Guardar</button>
-  </form>
-</div>
-
-<!-- TEMPERATURA -->
-<div class="card">
-  <h3>Temperatura / Humedad</h3>
-  <form action="/temperatura" method="POST">
-
-    Técnico:
-    <input name="tecnico">
-
-    Sector:
-    <select name="sector">
-      <option>ENTREGA ESTERIL</option>
-      <option>LAVADO</option>
-      <option>CIRUGIA</option>
-    </select>
-
-    Resultado:
-    <input name="resultado">
-
-    <button>Guardar</button>
-  </form>
-</div>
-
-<!-- ATP -->
-<div class="card">
-  <h3>ATP</h3>
-  <form action="/atp" method="POST" enctype="multipart/form-data">
-
-    Técnico:
-    <input name="tecnico">
-
-    Ubicación:
-    <input name="ubicacion">
-
-    Resultado:
-    <input name="resultado">
-
-    Foto:
-    <input type="file" name="foto">
-
-    <button>Guardar</button>
-  </form>
-</div>
-
-<!-- DUREZA -->
-<div class="card">
-  <h3>Dureza de Agua</h3>
-  <form action="/dureza" method="POST" enctype="multipart/form-data">
-
-    Técnico:
-    <input name="tecnico">
-
-    Resultado:
-    <select name="cumple">
-      <option>CUMPLE</option>
-      <option>NO CUMPLE</option>
-    </select>
-
-    Foto:
-    <input type="file" name="foto">
-
-    <button>Guardar</button>
-  </form>
-</div>
-
-<!-- EPP -->
-<div class="card">
-  <h3>Control EPP</h3>
-  <form action="/epp" method="POST">
-
-    Técnico:
-    <input name="tecnico">
-
-    <label><input type="checkbox" name="cofia"> Cofia</label><br>
-    <label><input type="checkbox" name="guantes"> Guantes</label><br>
-    <label><input type="checkbox" name="antiparras"> Antiparras</label><br>
-    <label><input type="checkbox" name="delantal"> Delantal</label><br>
-    <label><input type="checkbox" name="botas"> Botas</label><br>
-
-    <button>Guardar</button>
-  </form>
-</div>
-
-</div>
+<script>
+function mostrar(id) {
+  document.querySelectorAll(".card").forEach(c => c.style.display = "none");
+  document.getElementById(id).style.display = "block";
+}
+</script>
 
 </body>
 </html>
